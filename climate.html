@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Climate Change Temperature Predictor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      animation: alternate;
+      max-width: 1000px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    input[type="date"], input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .result {
+      margin-top: 15px;
+      padding: 10px;
+      background: #eef6ff;
+      border: 1px solid #cce0ff;
+      border-radius: 6px;
+    }
+    canvas {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌍 Climate Change — Temperature Predictor</h1>
+
+    <div class="controls">
+      <div>
+        <label for="startDate">Filter Start Date</label>
+        <input type="date" id="startDate">
+      </div>
+      <div>
+        <label for="endDate">Filter End Date</label>
+        <input type="date" id="endDate">
+      </div>
+      <div>
+        <label for="predictionDate">Prediction Date</label>
+        <input type="date" id="predictionDate">
+      </div>
+      <div>
+        <label for="csvUpload">Upload CSV (date,temp)</label>
+        <input type="file" id="csvUpload" accept=".csv">
+      </div>
+    </div>
+
+    <button onclick="applyRange()">Apply Range</button>
+    <button onclick="predictTemperature()" style="margin-top:10px; background:#007bff;">Predict Temperature</button>
+
+    <div id="result" class="result" style="display:none;"></div>
+
+    <canvas id="tempChart" height="100"></canvas>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('tempChart').getContext('2d');
+
+    let data = [
+      { date: "2000-01-01", temp: 14.1 },
+      { date: "2005-01-01", temp: 14.3 },
+      { date: "2010-01-01", temp: 14.6 },
+      { date: "2015-01-01", temp: 14.9 },
+      { date: "2020-01-01", temp: 15.2 },
+      { date: "2023-01-01", temp: 15.4 }
+    ];
+
+    function dateToNum(d) {
+      return new Date(d).getTime() / (1000 * 60 * 60 * 24);
+    }
+
+    function linearRegression(xs, ys) {
+      const n = xs.length;
+      const sumX = xs.reduce((a, b) => a + b, 0);
+      const sumY = ys.reduce((a, b) => a + b, 0);
+      const sumXY = xs.reduce((a, b, i) => a + b * ys[i], 0);
+      const sumX2 = xs.reduce((a, b) => a + b * b, 0);
+      const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const b = (sumY - m * sumX) / n;
+      return { m, b };
+    }
+
+    function renderChart(prediction = null) {
+      const labels = data.map(d => d.date);
+      const temps = data.map(d => d.temp);
+      if (prediction) {
+        labels.push(prediction.date);
+        temps.push(prediction.temp);
+      }
+
+      if (window.tempChartInstance) window.tempChartInstance.destroy();
+
+      window.tempChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Temperature (°C)',
+            data: temps,
+            borderColor: '#ff5733',
+            fill: false,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true } }
+        }
+      });
+    }
+
+    function applyRange() {
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      if (!start || !end) return;
+      data = data.filter(d => d.date >= start && d.date <= end);
+      renderChart();
+    }
+
+    function predictTemperature() {
+      const date = document.getElementById('predictionDate').value;
+      if (!date) return;
+      const xs = data.map(d => dateToNum(d.date));
+      const ys = data.map(d => d.temp);
+      const { m, b } = linearRegression(xs, ys);
+      const x0 = dateToNum(date);
+      const y0 = m * x0 + b;
+      renderChart({ date, temp: y0 });
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = `Predicted Temperature for ${date}: <strong>${y0.toFixed(2)} °C</strong>`;
+    }
+
+    document.getElementById('csvUpload').addEventListener('change', function(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const rows = e.target.result.split(/\r?\n/).slice(1);
+        rows.forEach(r => {
+          const [date, temp] = r.split(',');
+          if (date && temp) data.push({ date: date.trim(), temp: parseFloat(temp) });
+        });
+        renderChart();
+      };
+      reader.readAsText(file);
+    });
+
+    renderChart();
+  </script>
+</body>
+</html>
