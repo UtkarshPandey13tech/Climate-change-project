@@ -13,7 +13,6 @@
       padding: 0;
     }
     .container {
-      animation: alternate;
       max-width: 1000px;
       margin: 20px auto;
       background: white;
@@ -110,21 +109,6 @@
       { date: "2023-01-01", temp: 15.4 }
     ];
 
-    function dateToNum(d) {
-      return new Date(d).getTime() / (1000 * 60 * 60 * 24);
-    }
-
-    function linearRegression(xs, ys) {
-      const n = xs.length;
-      const sumX = xs.reduce((a, b) => a + b, 0);
-      const sumY = ys.reduce((a, b) => a + b, 0);
-      const sumXY = xs.reduce((a, b, i) => a + b * ys[i], 0);
-      const sumX2 = xs.reduce((a, b) => a + b * b, 0);
-      const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-      const b = (sumY - m * sumX) / n;
-      return { m, b };
-    }
-
     function renderChart(prediction = null) {
       const labels = data.map(d => d.date);
       const temps = data.map(d => d.temp);
@@ -162,18 +146,27 @@
       renderChart();
     }
 
-    function predictTemperature() {
+    async function predictTemperature() {
       const date = document.getElementById('predictionDate').value;
       if (!date) return;
-      const xs = data.map(d => dateToNum(d.date));
-      const ys = data.map(d => d.temp);
-      const { m, b } = linearRegression(xs, ys);
-      const x0 = dateToNum(date);
-      const y0 = m * x0 + b;
-      renderChart({ date, temp: y0 });
-      const resultDiv = document.getElementById('result');
-      resultDiv.style.display = 'block';
-      resultDiv.innerHTML = `Predicted Temperature for ${date}: <strong>${y0.toFixed(2)} °C</strong>`;
+
+      const response = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dates: data.map(d => d.date),
+          temps: data.map(d => d.temp),
+          predict_date: date
+        })
+      });
+
+      const result = await response.json();
+      if (result.prediction) {
+        renderChart({ date, temp: result.prediction });
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `Predicted Temperature for ${date}: <strong>${result.prediction} °C</strong>`;
+      }
     }
 
     document.getElementById('csvUpload').addEventListener('change', function(evt) {
