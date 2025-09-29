@@ -17,8 +17,6 @@ def predict():
         dates = np.array(data['dates'])
         temps = np.array(data['temps'])
         predict_date = data['predict_date']
-
-
         def date_to_num(d):
             return np.datetime64(d).astype('datetime64[D]').astype(int)
 
