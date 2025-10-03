@@ -68,7 +68,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🌍 Climate Change — Temperature Predictor</h1>
+    <h1>🌍 Climate Change — Temperature Predictor aaju napab toahr garmi 🌡️</h1>
 
     <div class="controls">
       <div>
@@ -148,6 +148,7 @@
 
     async function predictTemperature() {
       const date = document.getElementById('predictionDate').value;
+      console.log(date)
       if (!date) return;
 
       const response = await fetch("/predict", {
