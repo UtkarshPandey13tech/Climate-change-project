@@ -8,14 +8,14 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f7f9fc;
+      background: #91a9cf;
       margin: 0;
       padding: 0;
     }
     .container {
       max-width: 1000px;
       margin: 20px auto;
-      background: white;
+      background: rgb(169, 183, 192);
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -53,6 +53,7 @@
     }
     button:hover {
       background: #45a049;
+      font-size: 1.2rem;
     }
     .result {
       margin-top: 15px;
@@ -68,7 +69,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🌍 Climate Change — Temperature Predictor aaju napab toahr garmi 🌡️</h1>
+    <h1>🌍 Climate Change — Temperature Predictor 🌡️</h1>
 
     <div class="controls">
       <div>
@@ -96,6 +97,7 @@
 
     <canvas id="tempChart" height="100"></canvas>
   </div>
+  <footer> </footer>
 
   <script>
     const ctx = document.getElementById('tempChart').getContext('2d');

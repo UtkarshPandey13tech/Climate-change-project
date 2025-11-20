@@ -4,11 +4,9 @@ import os
 
 app = Flask(__name__)
 
-
 @app.route('/')
 def serve_html():
     return send_from_directory(os.getcwd(), 'climate.html')
-
 
 @app.route('/predict', methods=['POST'])
 def predict():
