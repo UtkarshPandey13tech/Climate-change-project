@@ -69,7 +69,11 @@
 </head>
 <body>
   <div class="container">
+<<<<<<< HEAD
     <h1>🌍 Climate Change — Temperature Predictor 🌡️</h1>
+=======
+    <h1>🌍 Climate Change — Temperature Predictor</h1>
+>>>>>>> parent of 5090ab9 (Update climate.html)
 
     <div class="controls">
       <div>
@@ -150,7 +154,6 @@
 
     async function predictTemperature() {
       const date = document.getElementById('predictionDate').value;
-      console.log(date)
       if (!date) return;
 
       const response = await fetch("/predict", {
